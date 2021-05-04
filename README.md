@@ -63,7 +63,7 @@ Download our pre-trained models, which we used for the experiments in our paper 
 [here](https://cloud.tnt.uni-hannover.de/index.php/s/IQpHzrxFs2ZJXBE) and place the files in the `models` directory.
 
 If you want to train our method for RGB input, please also obtain the pre-trained weights for the BTS depth estimator 
-from [here](https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet121.zip) and place them in
+from [here](https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet161.zip) and place them in
 the `models` folder as well.
 
 ## Evaluation
@@ -126,7 +126,7 @@ Replace `GPU_ID` with the ID of your GPU, e.g. `0`.
 ```
 python train.py --depth_model bts --train_depth --bn_on_input --hyps 32 \
 --depth_gpu GPU_ID --consac_gpu GPU_ID --inlier_gpu GPU_ID \
---load_depth ./models/bts_nyu_v2_pytorch_densenet121/model 
+--load_depth ./models/bts_nyu_v2_pytorch_densenet161/model 
 ```
 This will fine-tune the depth estimation network while using our pre-trained sampling weight estimator. 
 You can change the path to the pre-trained weights using the `--load PATH` option.
