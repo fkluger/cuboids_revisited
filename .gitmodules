@@ -1,0 +1,6 @@
+[submodule "util/torchgeometry"]
+	path = util/torchgeometry
+	url = https://github.com/fkluger/torchgeometry.git
+[submodule "bts"]
+	path = bts
+	url = https://github.com/fkluger/bts.git
