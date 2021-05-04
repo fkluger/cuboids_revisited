@@ -7,8 +7,8 @@ import json
 import torchgeometry as tgm
 from datetime import datetime
 import hashlib
-from pyquaternion import Quaternion
-import open3d as o3d
+# from pyquaternion import Quaternion
+# import open3d as o3d
 
 
 class CosineAnnealingCustom:
@@ -139,36 +139,36 @@ def depth_cache_path(opt, image, **kwargs):
     return os.path.join(depth_cache_dir(opt, **kwargs), h)
 
 
-def write_cuboid_meshes(cuboids, folder, index):
-
-    M, K, B, _ = cuboids.size()
-
-    for ki in range(K):
-        for mi in range(M):
-            cuboid = cuboids[mi, ki, 0].squeeze().numpy().astype(np.float32)
-
-            ax = cuboid[0]
-            ay = cuboid[1]
-            az = cuboid[2]
-            q = np.clip(cuboid[3:6], -100, 100)
-            t = np.clip(cuboid[6:9], -100, 100)
-
-            angle = np.linalg.norm(q, axis=-1, keepdims=True)
-            angle_axis = Quaternion(axis=q/angle, angle=angle.squeeze())
-            R = angle_axis.rotation_matrix
-
-            filename = os.path.join(folder, "%04d_%d_cuboid_%d.obj" % (index, ki, mi))
-
-            mesh = o3d.geometry.TriangleMesh.create_box(width=2, height=2, depth=2)
-            vertices = np.asarray(mesh.vertices) - 1.
-            vertices[:, 0] *= ax
-            vertices[:, 1] *= ay
-            vertices[:, 2] *= az
-            vertices = vertices @ R
-            vertices[:, 0] += t[0]
-            vertices[:, 1] += t[1]
-            vertices[:, 2] += t[2]
-
-            mesh.vertices = o3d.utility.Vector3dVector(vertices)
-            mesh.compute_vertex_normals()
-            o3d.io.write_triangle_mesh(filename, mesh, write_ascii=True)
+# def write_cuboid_meshes(cuboids, folder, index):
+#
+#     M, K, B, _ = cuboids.size()
+#
+#     for ki in range(K):
+#         for mi in range(M):
+#             cuboid = cuboids[mi, ki, 0].squeeze().numpy().astype(np.float32)
+#
+#             ax = cuboid[0]
+#             ay = cuboid[1]
+#             az = cuboid[2]
+#             q = np.clip(cuboid[3:6], -100, 100)
+#             t = np.clip(cuboid[6:9], -100, 100)
+#
+#             angle = np.linalg.norm(q, axis=-1, keepdims=True)
+#             angle_axis = Quaternion(axis=q/angle, angle=angle.squeeze())
+#             R = angle_axis.rotation_matrix
+#
+#             filename = os.path.join(folder, "%04d_%d_cuboid_%d.obj" % (index, ki, mi))
+#
+#             mesh = o3d.geometry.TriangleMesh.create_box(width=2, height=2, depth=2)
+#             vertices = np.asarray(mesh.vertices) - 1.
+#             vertices[:, 0] *= ax
+#             vertices[:, 1] *= ay
+#             vertices[:, 2] *= az
+#             vertices = vertices @ R
+#             vertices[:, 0] += t[0]
+#             vertices[:, 1] += t[1]
+#             vertices[:, 2] += t[2]
+#
+#             mesh.vertices = o3d.utility.Vector3dVector(vertices)
+#             mesh.compute_vertex_normals()
+#             o3d.io.write_triangle_mesh(filename, mesh, write_ascii=True)
