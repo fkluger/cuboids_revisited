@@ -1,4 +1,6 @@
 # Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images
+![Example](assets/animation1.gif)
+
 
 If you use this code, please cite [our paper](https://arxiv.org/):
 ```
