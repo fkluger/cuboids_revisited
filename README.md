@@ -2,7 +2,7 @@
 ![Example](assets/animation1.gif)
 
 
-If you use this code, please cite [our paper](https://arxiv.org/):
+If you use this code, please cite [our paper](http://arxiv.org/abs/2105.02047):
 ```
 @inproceedings{kluger2021cuboids,
   title={Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images},
