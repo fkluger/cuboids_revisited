@@ -22,7 +22,7 @@ def get_options():
     parser.add_argument('--consac_gpu', default="-1",  help='GPU ID for the sampling weight estimator (-1 for CPU)')
     parser.add_argument('--inlier_gpu', default="-1",  help='GPU ID for inlier computation (-1 for CPU)')
     parser.add_argument('--fitting_gpu', default="-1",  help='GPU ID for cuboid parameter fitting (-1 for CPU)')
-    parser.add_argument('--load', default="./models/consac_weights.net", type=str,
+    parser.add_argument('--load', default=None, type=str,
                         help='sampling weight estimator: load pretrained NN weights from file')
     parser.add_argument('--load_depth', default="./models/bts_weights.net", type=str,
                         help='depth estimator: load pretrained NN weights from file')

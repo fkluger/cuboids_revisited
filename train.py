@@ -61,9 +61,9 @@ H, W, Y, H_, W_, Y_, M, P, S, Q, R, B, K, model_dim, data_dim, minimal_set_size,
 inlier_function = consistency.soft_inlier_fun_gen(5. / opt.threshold, opt.threshold)
 
 if opt.lbfgs:
-    minimal_solver = CuboidFitLBFGS(a_max=opt.a_max, norm_by_volume=True)
+    minimal_solver = CuboidFitLBFGS(a_max=opt.a_max, norm_by_volume=True, iterations=opt.fitting_iterations)
 else:
-    minimal_solver = CuboidFitAdam(a_max=opt.a_max, norm_by_volume=True)
+    minimal_solver = CuboidFitAdam(a_max=opt.a_max, norm_by_volume=True, iterations=opt.fitting_iterations)
 
 iteration = 0
 first_epoch = 0
@@ -289,6 +289,7 @@ for epoch in range(first_epoch, opt.epochs):
 
         if mode == 'val':
             auc_values = calc_auc_values(oa_distances_for_val)
+            last_auc = auc_values["auc_at_20"]
             for key in auc_values:
                 print("AUC at %s: %.3f" % (key, auc_values[key]))
                 tensorboard_writer.add_scalar('%s/%s' % (mode, key), auc_values[key], iteration)

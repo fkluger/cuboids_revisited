@@ -83,8 +83,8 @@ def compute_losses(opt, dimensions, all_inlier_counts_estm, all_inlier_counts_gt
                 inlier_increase_estm = inlier_counts_estm[mi, :, ki]
                 inlier_increase_gt = inlier_counts_gt[mi, :, ki]
             else:
-                inlier_increase_estm = inlier_counts_estm[mi, :, ki] - inlier_counts_estm[mi-1, :, ki]
-                inlier_increase_gt = inlier_counts_gt[mi, :, ki] - inlier_counts_gt[mi-1, :, ki]
+                inlier_increase_estm = inlier_counts_estm[mi, :, ki] - inlier_counts_estm[mi-1, :, ki].max(0, True)[0]
+                inlier_increase_gt = inlier_counts_gt[mi, :, ki] - inlier_counts_gt[mi-1, :, ki].max(0, True)[0]
 
             selection_weights = torch.nn.functional.softmax(inlier_increase_estm / Y_ * 10, dim=0)
 
@@ -213,15 +213,15 @@ def backward_pass(opt, consac_model, consac_optimizer, feature_optimizer, all_lo
                 output_list += [max_prob_loss]
                 grad_list += [max_prob_grad]
 
-        if len(output_list) > 0:
-            torch.autograd.backward(output_list, grad_list)
+            if len(output_list) > 0:
+                torch.autograd.backward(output_list, grad_list)
 
-        for var in output_list:
-            del var
-        for var in grad_list:
-            del var
+            for var in output_list:
+                del var
+            for var in grad_list:
+                del var
 
-        del segments_and_selection_batched
+            del segments_and_selection_batched
 
         consac_optimizer.step()
 

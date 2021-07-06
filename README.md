@@ -73,14 +73,14 @@ In order to repeat the main experiments from our paper using pre-trained neural 
 
 ### Input: ground truth depth
 ```
-python evaluate.py 
+python evaluate.py --load ./models/consac_weights.net
 ```
 This will run our method for depth input on the NYU test set with the parameters used in the paper and report all 
 evaluation metrics at the end.
 
 ### Input: RGB image
 ```
-python evaluate.py --depth_model bts 
+python evaluate.py --depth_model bts --load ./models/consac_weights.net
 ```
 
 ### Additional options
@@ -97,7 +97,7 @@ Sampling weight estimation:
 --consac_gpu GPU_ID
 ```
 
-Cuboid fitting (CPU recommended if you have a lot of cores, GPU will be slower):
+Cuboid fitting (CPU recommended if you have a lot of cores, GPU will be slower, but your mileage may vary):
 ```
 --consac_gpu GPU_ID
 ```
@@ -116,7 +116,7 @@ Add the option `--visualise` to get a plot of sampling weights and inliers for e
 ## Training
 ### Depth input
 ```
-python train.py --train_consac --normalise_depth --hyps 32 --consac_gpu GPU_ID --inlier_gpu GPU_ID
+python train.py --train_consac --normalise_depth --hyps 32 --consac_gpu GPU_ID --inlier_gpu GPU_ID --fitting_gpu GPU_ID
 ```
 This will only train the sampling weight estimation network for (ground truth) depth input. 
 
@@ -127,7 +127,7 @@ Replace `GPU_ID` with the ID of your GPU, e.g. `0`.
 ### RGB input
 ```
 python train.py --depth_model bts --train_depth --bn_on_input --hyps 32 \
---depth_gpu GPU_ID --consac_gpu GPU_ID --inlier_gpu GPU_ID \
+--depth_gpu GPU_ID --consac_gpu GPU_ID --inlier_gpu GPU_ID --fitting_gpu GPU_ID \
 --load_depth ./models/bts_nyu_v2_pytorch_densenet161/model 
 ```
 This will fine-tune the depth estimation network while using our pre-trained sampling weight estimator. 
