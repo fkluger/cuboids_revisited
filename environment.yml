@@ -15,6 +15,7 @@ dependencies:
   - scipy=1.5.2
   - tensorboardx=2.2
   - torchvision=0.8.0
+  - open3d=0.13.0
   - pip
   - pip:
     - kornia==0.5.1

@@ -55,9 +55,12 @@ def estimate_depth(opt, images, image_mean, depth_model, dimensions, devices, de
 
         if opt.align_depth:
             depth = align_depths_affine(depth, gt_depth)
-
-        squared_depth_error = (depth.squeeze(-1) - gt_depth.to(depth.device)) ** 2
-        depth_mse = torch.mean(squared_depth_error)
+        
+        if gt_depth is not None:
+            squared_depth_error = (depth.squeeze(-1) - gt_depth.to(depth.device)) ** 2
+            depth_mse = torch.mean(squared_depth_error)
+        else:
+            depth_mse = None
 
     if write_cache:
         pickle.dump((depth.cpu().numpy(), depth_normalised.cpu().numpy(), depth_mse.cpu().numpy()), open(cache_file, "wb"))

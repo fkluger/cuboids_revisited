@@ -68,6 +68,28 @@ If you want to train our method for RGB input, please also obtain the pre-traine
 from [here](https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet161.zip) and place them in
 the `models` folder as well.
 
+## Demo
+
+We provide a demo script which performs cuboid fitting on any user provided RGB image. By default, an example from NYUv2 is used:
+```
+python demo.py --gpu GPU_ID
+```
+Two windows should appear. One shows the image, estimated depth, estimated sampling weights, and inlier maps per cuboid:
+
+![Demo](assets/demo_vis1.jpg)
+
+The second window provides a rendering of the extracted cuboids: 
+
+![Demo](assets/demo_vis2.gif)
+
+If you use your own images, you need to provide intrinsic camera parameters: focal length and principal point.
+```
+python demo.py --image_path PATH --gpu GPU_ID \
+-f FOCAL_LENGTH -cx PRINCIPAL_POINT_X -cy PRINCIPAL_POINT_Y
+```
+
+
+
 ## Evaluation
 In order to repeat the main experiments from our paper using pre-trained neural networks, you can simply run the following commands:
 

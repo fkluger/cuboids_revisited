@@ -40,8 +40,11 @@ def load_opts_for_eval(opt):
     return opt
 
 
-def get_dimensions(opt, dataset):
-    image_size = dataset.get_image_size()
+def get_dimensions(opt, dataset=None, image_size=None):
+    if dataset is not None:
+        image_size = dataset.get_image_size()
+    else:
+        assert image_size is not None
 
     minimal_set_size = opt.mss
 
@@ -186,7 +189,7 @@ def get_consac_model(opt, devices, data_dim=2):
                            additional_prob=False)
 
     if opt.load is not None:
-        print("consac device: ", consac_device)
+        # print("consac device: ", consac_device)
         consac_model.load_state_dict(torch.load(opt.load, map_location=consac_device), strict=False)
     consac_model = consac_model.to(consac_device)
 

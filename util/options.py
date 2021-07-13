@@ -78,6 +78,14 @@ def get_options():
     parser.add_argument('--sampleid', default=0, type=int, help='start at image index')
     parser.add_argument('--split', default="test", help='dataset split to use')
 
+    # demo:
+    parser.add_argument('--image_path', default="./assets/nyu_example.png", help='image path')
+    parser.add_argument('--gpu', default="-1",  help='GPU ID')
+    parser.add_argument('-f', type=float, default=519, help='focal length')
+    parser.add_argument('-cx', type=float, default=326, help='principal point, x coordinate')
+    parser.add_argument('-cy', type=float, default=256, help='principal point, y coordinate')
+
+
     return parser.parse_args()
 
 
