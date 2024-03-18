@@ -1,4 +1,10 @@
 # Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images
+
+**UPDATE (2024/03/18):**
+An extended version of our work has been accepted for publication in Transactions on Pattern Analysis and Machine Intelligence (PAMI):\
+[Robust Shape Fitting for 3D Scene Abstraction](https://arxiv.org/abs/2403.10452)\
+The correspondingly extended source code will be published here soon.
+
 ![Example](assets/animation1.gif)
 
 
