@@ -2,7 +2,6 @@ import os.path
 import scipy.io
 from torch.utils.data import Dataset
 import numpy as np
-import glob
 import pickle
 import skimage.transform
 import time
@@ -18,17 +17,28 @@ class NYUDepth:
 
         self.scale = scale
 
+        self.image_size = (640, 480)
+
         if data_directory is not None:
-            files = glob.glob(data_directory + "/*.pkl")
+            # files = glob.glob(data_directory + "/*.pkl")
+            files = [os.path.join(data_directory, "%04d.pkl" % i) for i in range(1449)]
             files.sort()
+
+            print("read folder contents")
 
             if split_mat is None:
                 if split == 'train':
-                    self.dataset_files = files[:1000]
+                    # self.dataset_files = files[:1000]
+                    self.dataset_files = [(i, files[i]) for i in range(1000)]
                 elif split == 'val':
-                    self.dataset_files = files[1000:1224]
+                    # self.dataset_files = files[1000:1224]
+                    self.dataset_files = [(i, files[i]) for i in range(1000, 1224)]
                 elif split == 'test':
-                    self.dataset_files = files[1224:]
+                    # self.dataset_files = files[1224:]
+                    self.dataset_files = [(i, files[i]) for i in range(1224, len(files))]
+                elif split == 'all':
+                    # self.dataset_files = files
+                    self.dataset_files = [(i, files[i]) for i in range(len(files))]
                 else:
                     assert False
             else:
@@ -77,7 +87,8 @@ class NYUDepth:
 
             while try_loading:
                 if os.path.isfile(filename):
-                    data = pickle.load(open(filename, 'rb'))
+                    with open(filename, 'rb') as f:
+                        data = pickle.load(f)
                     try_loading = False
                 else:
                     if tries < 10:
@@ -140,8 +151,8 @@ class NYUDepthDataset(Dataset):
     def __getitem__(self, key):
         datum = self.dataset[key]
 
-        intrinsic = self.dataset.K
-        depth = datum["depth"]
+        intrinsic = self.dataset.K.astype(np.float32)
+        depth = datum["depth"].astype(np.float32)
         coord_grid = datum["coord_grid"]
         labels = np.zeros(depth.shape[0:2])
         model_params = np.zeros((1, 12))
@@ -171,16 +182,59 @@ class NYURGBDataset(Dataset):
     def __getitem__(self, key):
         datum = self.dataset[key]
 
-        intrinsic = self.dataset.K
-        depth = datum["depth"]
+        intrinsic = self.dataset.K.astype(np.float32)
+        depth = datum["depth"].astype(np.float32)
         image = datum["image"].astype(np.float32) / 255.
         coord_grid = datum["coord_grid"]
         labels = np.zeros(depth.shape[0:2])
         model_params = np.zeros((1, 12))
 
-        return image, intrinsic, coord_grid, labels, model_params, depth, datum["index"]
+        mask = np.ones(coord_grid.shape[:2], dtype=np.float32)
+
+        return image, intrinsic, coord_grid, labels, model_params, depth, datum["index"], mask
 
     def get_image_size(self, key=0):
         datum = self.dataset[key]
         depth = datum["depth"]
         return depth.shape[0:2]
+
+
+if __name__ == "__main__":
+
+    import matplotlib.pyplot as plt
+    from matplotlib import ticker
+    plt.rcParams['text.usetex'] = True
+
+    target_folder = "/home/kluger/tnt/thesis/chap_4_datasets/fig/nyu_depth"
+    os.makedirs(target_folder, exist_ok=True)
+
+    dataset = NYUDepth(keep_in_mem = True, data_directory = "/data/kluger/datasets/nyu_files", split = 'all', scale = 1., split_mat = None)
+
+    for idx, sample in enumerate(dataset):
+        print(idx)
+        fig = plt.figure(figsize=(4*2+0.5, 3), dpi=256)
+        axs = fig.subplots(nrows=1, ncols=3, gridspec_kw={'width_ratios': [8, 8, 1]})
+        for ax in axs[:2]:
+            ax.set_aspect('equal', 'box')
+            ax.axis('off')
+
+        axs[0].imshow(sample["image"])
+        pos = axs[1].imshow(sample["depth"], cmap="cividis")
+
+        bar = fig.colorbar(pos, cax=axs[2])
+        # bar.set_label('depth (m)', rotation=270)
+        tick_locator = ticker.MaxNLocator(nbins=10, min_n_ticks=8)
+        bar.locator = tick_locator
+        bar.update_ticks()
+
+        fig.tight_layout()
+        axs[0].set_axis_off()
+        axs[1].set_axis_off()
+        # plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        # plt.margins(0, 0)
+        # plt.savefig(os.path.join(target_folder, "%04d_vis.png" % (idx)), bbox_inches='tight', pad_inches=0)
+        plt.savefig(os.path.join(target_folder, "%04d_vis.pdf" % (idx)), pad_inches=0)
+        plt.close()
+        # plt.show()
+
+        # exit(0)

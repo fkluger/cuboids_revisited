@@ -1,24 +1,29 @@
-name: cuboids_revisited
+
+name: cuboids_pami
 channels:
   - pytorch
   - conda-forge
+  - pytorch3d
+  - iopath
+  - bottler
+  - fvcore
   - defaults
 dependencies:
-  - cudatoolkit=10.2
-  - mamba
-  - matplotlib=3.3.4
-  - numpy=1.19.2
-  - python=3.6.13
-  - pytorch=1.7.0
-  - scikit-image=0.17.2
-  - scikit-learn=0.24.1
-  - scipy=1.5.2
-  - tensorboardx=2.2
-  - torchvision=0.8.0
-  - open3d=0.13.0
+  - matplotlib
+  - numpy
+  - python=3.9
+  - pytorch=1.10.1
+  - cudatoolkit=11.3
+  - mkl=2024.0
+  - iopath
+  - nvidiacub
+  - fvcore
+  - scikit-image
+  - scikit-learn
+  - scipy
+  - pytorch3d
+  - opencv=4.7.0
   - pip
   - pip:
-    - kornia==0.5.1
-    - pyquaternion==0.9.9
-prefix: /home/kluger/anaconda3/envs/cuboids_revisited
-
+    - wandb
+    - open3d==0.18.0

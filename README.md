@@ -1,14 +1,18 @@
-# Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images
+# Robust Shape Fitting for 3D Scene Abstraction
 
-**UPDATE (2024/03/18):**
-An extended version of our work has been accepted for publication in Transactions on Pattern Analysis and Machine Intelligence (PAMI):\
-[Robust Shape Fitting for 3D Scene Abstraction](https://arxiv.org/abs/2403.10452)\
-The correspondingly extended source code will be published here soon.
+This repository contains the source code for the cuboid-based scene decomposition method described in our paper *[Robust Shape Fitting for 3D Scene Abstraction](https://arxiv.org/abs/2403.10452)*.
+It is extension of our previous work *[Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images](http://arxiv.org/abs/2105.02047)*.
+Please refer to the following repository if you are looking for the source code of the previous version: [cuboids_revisited_cvpr21](https://github.com/fkluger/cuboids_revisited_cvpr21).
 
-![Example](assets/animation1.gif)
-
-
-If you use this code, please cite [our paper](http://arxiv.org/abs/2105.02047):
+If you use this code, please cite both papers:
+```
+@article{kluger2024robust,
+  title={Robust Shape Fitting for 3D Scene Abstraction},
+  author={Kluger, Florian and Brachmann, Eric and Yang, Michael Ying and Rosenhahn, Bodo},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year={2024}
+}
+```
 ```
 @inproceedings{kluger2021cuboids,
   title={Cuboids Revisited: Learning Robust 3D Shape Fitting to Single RGB Images},
@@ -40,16 +44,9 @@ git submodule update --init --recursive
 Set up the Python environment using [Anaconda](https://www.anaconda.com/): 
 ```
 conda env create -f environment.yml
-source activate cuboids_revisited
+source activate cuboids_pami
+conda install pytorch==1.10.1 torchvision==0.11.2 cudatoolkit=11.3 -c pytorch -c conda-forge
 ```
-
-Install the patched torchgeometry lib:
-```
-cd util/torchgeometry
-python setup.py install
-cd ../..
-```
-
 
 ## Data
 ### NYU Depth v2
@@ -66,103 +63,104 @@ Then, extract all images and depth maps to separate Pickle files using our helpe
 python util/extract_nyu_to_files.py --source nyu_depth_v2_labeled.v7.mat --destination ./datasets/nyu_depth/files
 ```
 
+### Synthetic Metropolis Homographies (SMH)
+
+Download the SMH dataset with depth maps from here: https://github.com/fkluger/smh
+
 ## Pre-trained models
 Download our pre-trained models, which we used for the experiments in our paper from 
-[here](https://cloud.tnt.uni-hannover.de/index.php/s/IQpHzrxFs2ZJXBE) and place the files in the `models` directory.
+[here](https://cloud.tnt.uni-hannover.de/index.php/s/94QCTEeiZqARHpc) and place the files in the `models` directory.
 
 If you want to train our method for RGB input, please also obtain the pre-trained weights for the BTS depth estimator 
-from [here](https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet161.zip) and place them in
+from [here](https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet121.zip) and place them in
 the `models` folder as well.
 
-## Demo
-
-We provide a demo script which performs cuboid fitting on any user provided RGB image. By default, an example from NYUv2 is used:
-```
-python demo.py --gpu GPU_ID
-```
-Two windows should appear. One shows the image, estimated depth, estimated sampling weights, and inlier maps per cuboid:
-
-![Demo](assets/demo_vis1.jpg)
-
-The second window provides a rendering of the extracted cuboids: 
-
-![Demo](assets/demo_vis2.gif)
-
-If you use your own images, you need to provide intrinsic camera parameters: focal length and principal point.
-```
-python demo.py --image_path PATH --gpu GPU_ID \
--f FOCAL_LENGTH -cx PRINCIPAL_POINT_X -cy PRINCIPAL_POINT_Y
-```
-
-
-
 ## Evaluation
-In order to repeat the main experiments from our paper using pre-trained neural networks, you can simply run the following commands:
+In order to repeat the main experiments from our paper using pre-trained neural networks, you can run the following commands:
 
-### Input: ground truth depth
+### NYU
+#### Ground truth depth, numerical solver
 ```
-python evaluate.py --load ./models/consac_weights.net
+python evaluate.py --load models/nyu_gt_numerical/run1/consac_weights_best.net
 ```
 This will run our method for depth input on the NYU test set with the parameters used in the paper and report all 
 evaluation metrics at the end.
+Replace `run1`with `run2 ... run5` to evaluate one of the other training runs.  
 
-### Input: RGB image
+#### Ground truth depth, neural solver
 ```
-python evaluate.py --depth_model bts --load ./models/consac_weights.net
+python evaluate.py --data_path datasets/nyu_depth/files --load models/nyu_gt_neural/run1/consac_weights_best.net --minsolver transformer --load_solver models/nyu_gt_neural/run1/primitive_fit_weights_best.net
+```
+
+#### RGB image, numerical solver
+```
+python evaluate.py --data_path datasets/nyu_depth/files --depth_model bts --load models/nyu_bts_numerical/run1/consac_weights_best.net --load_depth models/nyu_bts_numerical/run1/depth_weights_best.net 
+```
+
+#### RGB image, neural solver
+```
+python evaluate.py --data_path datasets/nyu_depth/files --depth_model bts --load models/nyu_bts_neural/run1/consac_weights_best.net --load_depth models/nyu_bts_neural/run1/depth_weights_best.net --minsolver transformer --load_solver models/nyu_bts_neural/run1/primitive_fit_weights_best.net
+```
+
+### Synthetic Metropolis Homographies
+
+#### Ground truth depth, numerical solver
+```
+python evaluate.py --dataset smh --data_path /path/to/smh -t 0.04 --a_min 2 --a_max 30 --load models/smh_gt_numerical/run1/consac_weights_best.net --instances 16 --fitting_lr 0.5
+```
+
+#### Ground truth depth, neural solver
+```
+python evaluate.py --dataset smh --data_path /path/to/smh -t 0.04 --a_min 2 --a_max 30 --load models/smh_gt_neural/run1/consac_weights_best.net --minsolver transformer --load_solver models/smh_gt_neural/run1/primitive_fit_weights_best.net
 ```
 
 ### Additional options
-#### GPU usage
-By default, all computations run on the CPU. You can decide which parts of the pipeline shall be executed on which GPU.
-
-Depth estimation (GPU recommended):
-```
---depth_gpu GPU_ID
-```
-
-Sampling weight estimation:
-```
---consac_gpu GPU_ID
-```
-
-Cuboid fitting (CPU recommended if you have a lot of cores, GPU will be slower, but your mileage may vary):
-```
---consac_gpu GPU_ID
-```
-
-Inlier counting:
-```
---inlier_gpu GPU_ID
-```
-
-If you set `GPUID = -1` (default value), the CPU will be used.
-
 #### Visualisation
 
-Add the option `--visualise` to get a plot of sampling weights and inliers for each image.
+Add the option `--visualise` to save plots visualising the results for each image.
+Set the destination folder with the `--eval_results PATH` option.
 
 ## Training
-### Depth input
+
+### Pre-Training: NYU
+#### Sample weight network:
 ```
-python train.py --train_consac --normalise_depth --hyps 32 --consac_gpu GPU_ID --inlier_gpu GPU_ID --fitting_gpu GPU_ID
+python train.py --train_consac --hyps 32 --data_path datasets/nyu_depth/files
 ```
-This will only train the sampling weight estimation network for (ground truth) depth input. 
-
-By default, the final network weights will be saved as `./results/train/session_***_gt/consac_weights_best.net`. 
-
-Replace `GPU_ID` with the ID of your GPU, e.g. `0`. 
-
-### RGB input
+#### Neural solver:
 ```
-python train.py --depth_model bts --train_depth --bn_on_input --hyps 32 \
---depth_gpu GPU_ID --consac_gpu GPU_ID --inlier_gpu GPU_ID --fitting_gpu GPU_ID \
---load_depth ./models/bts_nyu_v2_pytorch_densenet161/model 
+python pretrain_solver.py --dataset nyu 
 ```
-This will fine-tune the depth estimation network while using our pre-trained sampling weight estimator. 
-You can change the path to the pre-trained weights using the `--load PATH` option.
 
-If you want to fine-tune the sampling weight estimator as well, add `--train_consac`. 
+### Pre-Training: SMH
+#### Sample weight network:
+```
+python train.py --dataset smh --data_path /path/to/smh --train_consac --hyps 32 --consac_lr 1e-6 --maximise_second_entropy 0.1 --epochs 100 --a_min 2.0 --a_min 30 --fitting_lr 0.5 
+```
+#### Neural solver:
+```
+python pretrain_solver.py --dataset smh
+```
 
-By default, the final network weights of the depth estimator will be saved as `./results/train/session_***_bts/depth_weights_best.net`.
+### Fine-Tuning: NYU
+#### Depth input, neural solver:
+```
+python train.py --minsolver transformer --train_consac --train_solver --consac_lr 1e-7 --solver_lr 1e-7 --softmax_alpha 1000 --max_prob_loss 0 --minimise_corr 0 --maximise_second_entropy 0 --hyps 32 --load models/nyu_gt_numerical/run1/consac_weights_best.net --load_solver models/solver/nyu/primitive_fit_weights_best.net --data_path datasets/nyu_depth/files
+```
+#### RGB input, numerical solver:
+```
+python train.py --depth_model bts --train_consac --train_depth --consac_lr 1e-7 --depth_lr 1e-7 --softmax_alpha 1000 --max_prob_loss 0 --minimise_corr 0 --maximise_second_entropy 0 --hyps 32 --load models/nyu_gt_numerical/run1/consac_weights_best.net
+```
+#### RGB input, neural solver:
+```
+python train.py --minsolver transformer --depth_model bts --train_consac --train_solver --train_depth --consac_lr 1e-7 --solver_lr 1e-7 --depth_lr 1e-7 --softmax_alpha 1000 --max_prob_loss 0 --minimise_corr 0 --maximise_second_entropy 0 --hyps 32 --load models/nyu_gt_numerical/run1/consac_weights_best.net --load_solver models/solver/nyu/primitive_fit_weights_best.net --data_path datasets/nyu_depth/files
+```
+
+### Fine-Tuning: SMH
+#### Depth input, neural solver:
+```
+python train.py --dataset smh --data_path /path/to/smh -t 0.04 --a_min 2 --a_max 30 --minsolver transformer --train_consac --train_solver --consac_lr 1e-8 --solver_lr 1e-8 --softmax_alpha 1000 --max_prob_loss 0 --minimise_corr 0 --maximise_second_entropy 0 --hyps 32 --load models/smh_gt_numerical/run1/consac_weights_best.net --load_solver models/solver/smh/primitive_fit_weights_best.net
+```
+
 
 You may want to use a separate GPU for `--depth_gpu`, as the whole pipeline does not fit on a single GPU with 12GB memory. 

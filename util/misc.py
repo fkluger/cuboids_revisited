@@ -4,11 +4,9 @@ import math
 import torch
 import os
 import json
-import torchgeometry as tgm
+import pytorch3d as p3d
 from datetime import datetime
 import hashlib
-# from pyquaternion import Quaternion
-# import open3d as o3d
 
 
 class CosineAnnealingCustom:
@@ -47,8 +45,7 @@ def sample_cuboids_uniformly(params, density):
     t = torch.clamp(params[:, 6:9], -100, 100)
 
     angle_axis = q
-    R = tgm.angle_axis_to_rotation_matrix(angle_axis)
-    R = R[:, :3, :3]
+    R = p3d.transforms.axis_angle_to_matrix(angle_axis)
 
     area_1 = a2*a3
     area_2 = a1*a3
@@ -87,35 +84,43 @@ def create_eval_folder(opt):
     if opt.eval_results is None:
         return None, None
     else:
-        date_time = datetime.now().strftime("%Y%m%d_%H-%M-%S")
+        if opt.load_eval_results is None:
+            date_time = datetime.now().strftime("%Y%m%d_%H-%M-%S")
 
-        if opt.seqransac:
-            session_id = "seqransac"
-        else:
-            substring_start = opt.load.find("session_")
-            if substring_start >= 0:
-                session_id = opt.load[substring_start:substring_start+11]
+            if opt.seqransac:
+                session_id = "seqransac"
             else:
                 session_id = date_time
 
-        substring_start = opt.load_depth.find("session_")
-        if substring_start >= 0:
-            session_id2 = opt.load_depth[substring_start:substring_start+11]
+                for path in [opt.load, opt.load_depth, opt.load_solver]:
+                    if path is not None:
+                        substring_start = path.find("session_")
+                        if substring_start >= 0:
+                            session_id = path[substring_start:substring_start+11]
+                            break
+
+            substring_start = opt.load_depth.find("session_")
+            if substring_start >= 0:
+                session_id2 = opt.load_depth[substring_start:substring_start+11]
+            else:
+                session_id2 = "original"
+
+            settings_string = "m%d_p%d_s%d_em-%d-%d_rs%d_%s" % \
+            (opt.instances, opt.outerhyps, opt.hyps, opt.step_em_iter, opt.final_em_iter,
+             opt.seed, date_time)
+
+            folder = os.path.join(opt.eval_results, opt.split, opt.depth_model, session_id, session_id2, settings_string)
+
+            os.makedirs(folder, exist_ok=True)
+
+            log_file = os.path.join(folder, "output.log")
+            log = Tee(log_file, "w", file_only=False)
+            # log = None
+            with open(os.path.join(folder, 'commandline_args.txt'), 'w') as f:
+                json.dump(opt.__dict__, f, indent=2)
         else:
-            session_id2 = "original"
-
-        settings_string = "m%d_p%d_s%d_k%d_ic%d_rs%d" % \
-        (opt.instances, opt.outerhyps, opt.hyps, opt.samplecount, opt.inlier_cutoff, opt.seed)
-
-        folder = os.path.join(opt.eval_results, opt.split, opt.depth_model, session_id, session_id2, settings_string)
-
-        os.makedirs(folder, exist_ok=True)
-
-        log_file = os.path.join(folder, "output.log")
-        log = Tee(log_file, "w", file_only=False)
-
-        with open(os.path.join(folder, 'commandline_args.txt'), 'w') as f:
-            json.dump(opt.__dict__, f, indent=2)
+            folder = opt.load_eval_results
+            log = None
 
         print("Saving results in: %s " % folder)
 
@@ -138,7 +143,7 @@ def depth_cache_path(opt, image, **kwargs):
 
     return os.path.join(depth_cache_dir(opt, **kwargs), h)
 
-
+#
 # def write_cuboid_meshes(cuboids, folder, index):
 #
 #     M, K, B, _ = cuboids.size()
